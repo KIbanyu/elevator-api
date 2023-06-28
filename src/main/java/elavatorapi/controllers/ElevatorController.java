@@ -1,8 +1,13 @@
 package elavatorapi.controllers;
 
+import elavatorapi.models.requests.CallElevator;
+import elavatorapi.services.ElevatorService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
 
 /**
  * Created by Itotia Kibanyu on 26 Jun, 2023
@@ -11,23 +16,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1")
 public class ElevatorController {
 
+    @Autowired
+    private ElevatorService elevatorService;
+
 
     @PostMapping("/call-elevator")
-    public ResponseEntity<?> callElevator(){
-        return new ResponseEntity<>("Success", HttpStatus.OK);
+    public ResponseEntity<HashMap<String, Object>> callElevator(@RequestBody CallElevator request){
+        return elevatorService.getElevator(request);
 
     }
 
-    @GetMapping("/get-elevator-info/{elevatorId}")
-    public ResponseEntity<?> getElevatorInfo(@PathVariable("elevatorId") long elevatorId){
-        return new ResponseEntity<>(elevatorId, HttpStatus.OK);
-
-    }
-
-
-    @GetMapping("/get-elevators")
+    @GetMapping("/get-elevators-info")
     public ResponseEntity<?> getElevators(){
-        return new ResponseEntity<>("All", HttpStatus.OK);
+        return elevatorService.getElevatorsInfo();
 
     }
 }
