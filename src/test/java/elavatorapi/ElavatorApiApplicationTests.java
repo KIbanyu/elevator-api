@@ -22,7 +22,6 @@ class ElavatorApiApplicationTests extends AbstractTest {
 	}
 	String uri = "/api/v1";
 
-
 	@Test
 	void contextLoads() {
 	}
@@ -34,7 +33,7 @@ class ElavatorApiApplicationTests extends AbstractTest {
 		if (mvc == null) {
 			setUp();
 		}
-		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri + "/get-elevators")
+		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri + "/get-elevators-info")
 				.accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
 		int status = mvcResult.getResponse().getStatus();
 		assertEquals(200, status);
@@ -57,18 +56,7 @@ class ElavatorApiApplicationTests extends AbstractTest {
 //	}
 
 
-	@Test
-	void getElevatorInfo() throws Exception {
 
-		if (mvc == null) {
-			setUp();
-		}
-		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri + "/get-elevators-info")
-				.accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
-		int status = mvcResult.getResponse().getStatus();
-		assertEquals(200, status);
-
-	}
 
 
 }
