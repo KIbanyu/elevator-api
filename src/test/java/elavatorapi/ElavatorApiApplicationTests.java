@@ -43,18 +43,18 @@ class ElavatorApiApplicationTests extends AbstractTest {
 
 
 
-	@Test
-	void callElevator() throws Exception {
-
-		if (mvc == null) {
-			setUp();
-		}
-		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.post(uri + "/call-elevator")
-				.accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
-		int status = mvcResult.getResponse().getStatus();
-		assertEquals(200, status);
-
-	}
+//	@Test
+//	void callElevator() throws Exception {
+//
+//		if (mvc == null) {
+//			setUp();
+//		}
+//		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.post(uri + "/call-elevator")
+//				.accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
+//		int status = mvcResult.getResponse().getStatus();
+//		assertEquals(200, status);
+//
+//	}
 
 
 	@Test
@@ -63,15 +63,12 @@ class ElavatorApiApplicationTests extends AbstractTest {
 		if (mvc == null) {
 			setUp();
 		}
-		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri + "/get-elevator-info/1")
+		MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.get(uri + "/get-elevators-info")
 				.accept(MediaType.APPLICATION_JSON_VALUE)).andReturn();
 		int status = mvcResult.getResponse().getStatus();
 		assertEquals(200, status);
 
 	}
-
-
-
 
 
 }

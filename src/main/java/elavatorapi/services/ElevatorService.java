@@ -40,96 +40,14 @@ public class ElevatorService {
     HashMap<String, Object> response;
 
 
-    public ResponseEntity<HashMap<String, Object>> getElevator(CallElevator request) {
-        response = new HashMap<>();
+    @Async
+    public void getElevator(CallElevator request) throws InterruptedException {
         try {
+
             log.info(appProps.getLine());
             log.info("Elevator request " + new Gson().toJson(request));
             log.info(appProps.getLine());
 
-
-            String[] elevators = elevatorRepo.searchAllByStatus();
-
-            //Validate elevator
-            if (request.getElevatorIdentifier() == null
-                    || request.getElevatorIdentifier().isEmpty()
-                    || request.getElevatorIdentifier().isBlank()) {
-                response.put(appProps.getStatus(), HttpStatus.BAD_REQUEST);
-                response.put(appProps.getMessage(), "Enter the elevator you want to call " + Arrays.asList(elevators));
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }
-
-
-            if (!Arrays.asList(elevators).contains(request.getElevatorIdentifier().replace(" ", ""))) {
-                response.put(appProps.getStatus(), HttpStatus.BAD_REQUEST);
-                response.put(appProps.getMessage(), "Enter the elevator you want to call " + Arrays.asList(elevators));
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-            }
-
-
-            //Check if the floor entered is more than number of floors in the building
-            if (request.getFromFloor() < 0 || request.getFromFloor() > appProps.getFloorCount()) {
-                response.put(appProps.getStatus(), HttpStatus.BAD_REQUEST);
-                response.put(appProps.getMessage(), "Invalid From floor, floors must be between 0 and " + appProps.getFloorCount());
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-
-            }
-
-            //Check if the floor entered is more than number of floors in the building
-            if (request.getToFloor() < 0 || request.getToFloor() > appProps.getFloorCount()) {
-                response.put(appProps.getStatus(), HttpStatus.BAD_REQUEST);
-                response.put(appProps.getMessage(), "Invalid To floor, floors must be between 0 and " + appProps.getFloorCount());
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-
-            }
-
-
-            if (Objects.equals(request.getFromFloor(), request.getToFloor())) {
-                response.put(appProps.getStatus(), HttpStatus.BAD_REQUEST);
-                response.put(appProps.getMessage(), "You cannot move to same floor");
-                return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
-
-            }
-
-            startElevatorsActions(request);
-            response.put(appProps.getStatus(), HttpStatus.OK);
-            response.put(appProps.getMessage(), "Success");
-            return new ResponseEntity<>(response, HttpStatus.OK);
-
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-
-    public ResponseEntity<HashMap<String, Object>> getElevatorsInfo() {
-        response = new HashMap<>();
-        try {
-            response.put("status", HttpStatus.OK);
-            response.put("message", "success");
-            response.put("elevators", elevatorLogRepo.filterAllElevatorLatestLog());
-            return new ResponseEntity<>(response, HttpStatus.OK);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            response.put("status", HttpStatus.INTERNAL_SERVER_ERROR);
-            response.put("message", "An exception occurred while getting elevators info");
-            return new ResponseEntity<>(response, HttpStatus.OK);
-        }
-
-
-    }
-
-
-    @Async
-    public CompletableFuture<String> startElevatorsActions(CallElevator request) {
-
-
-        try {
             ElevatorsEntity calledElevator = elevatorRepo.findFirstByElevatorIdentifier(request.getElevatorIdentifier());
             ElevatorLogsEntity elevatorLogsEntity = elevatorLogRepo.filerByElevatorId(calledElevator.getId());
             int directionCalled = request.getToFloor() - request.getFromFloor();
@@ -262,19 +180,43 @@ public class ElevatorService {
 
                 }
 
+            } else {
+
+                log.info(appProps.getLine());
+                log.info("ELEVATOR ALREADY ENGAGED");
+                log.info(appProps.getLine());
+
 
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return new CompletableFuture<>();
+
+        new CompletableFuture<>();
+    }
+
+
+    public ResponseEntity<HashMap<String, Object>> getElevatorsInfo() {
+        response = new HashMap<>();
+        try {
+            response.put("status", HttpStatus.OK);
+            response.put("message", "success");
+            response.put("elevators", elevatorLogRepo.filterAllElevatorLatestLog());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("status", HttpStatus.INTERNAL_SERVER_ERROR);
+            response.put("message", "An exception occurred while getting elevators info");
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
 
     }
 
 
     public void updateElevator(String direction, int fromFloor, int toFloor, String state, long elevatorId) {
-
 
         ElevatorLogsEntity createLog = new ElevatorLogsEntity();
         createLog.setElevatorId(elevatorId);
