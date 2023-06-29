@@ -8,6 +8,7 @@ import elavatorapi.entities.ElevatorsEntity;
 
 import elavatorapi.entities.SqlLogsEntity;
 import elavatorapi.models.requests.CallElevator;
+import elavatorapi.models.responses.ElevatorInfo;
 import elavatorapi.repositories.ElevatorLogRepo;
 import elavatorapi.repositories.ElevatorRepo;
 import elavatorapi.repositories.SqlLogsRepo;
@@ -50,9 +51,9 @@ public class ElevatorService {
         log.info(appProps.getLine());
 
         ElevatorsEntity calledElevator = elevatorRepo.findFirstByElevatorIdentifier(request.getElevatorIdentifier());
-        saveSqlLog("select * from elevators where elevator_identifier =:"+request.getElevatorIdentifier()+";");
+        saveSqlLog("select * from elevators where elevator_identifier =:" + request.getElevatorIdentifier() + ";");
         ElevatorLogsEntity elevatorLogsEntity = elevatorLogRepo.filerByElevatorId(calledElevator.getId());
-        saveSqlLog("select * from elevator_logs where elvator_id =:"+calledElevator.getId()+" order by updated_on desc limit 1");
+        saveSqlLog("select * from elevator_logs where elvator_id =:" + calledElevator.getId() + " order by updated_on desc limit 1");
 
         int directionCalled = request.getToFloor() - request.getFromFloor();
         int currentElevatorFloor = elevatorLogsEntity.getCurrentFloor();
@@ -108,7 +109,7 @@ public class ElevatorService {
                 }
                 //On arrival, elevator sleeps for two seconds
                 Thread.sleep(2 * 1000L);
-                updateElevatorIfo("IDLE", currentElevatorFloor,currentElevatorFloor, "IDLE", calledElevator.getId(), 0);
+                updateElevatorIfo("IDLE", currentElevatorFloor, currentElevatorFloor, "IDLE", calledElevator.getId(), 0);
 
 
             } else {
@@ -198,8 +199,6 @@ public class ElevatorService {
     }
 
 
-
-
     public void updateElevatorIfo(String elevatorDirection, int currentElevatorFloor, int toFloor, String state, long elevatorId, int seconds) throws InterruptedException {
         updateElevator(elevatorDirection, currentElevatorFloor, toFloor, state, elevatorId);
         Thread.sleep(seconds * 1000L);
@@ -209,9 +208,27 @@ public class ElevatorService {
     public ResponseEntity<HashMap<String, Object>> getElevatorsInfo() {
         response = new HashMap<>();
         try {
+
+            List<ElevatorInfo> elevatorInfos = new ArrayList<>();
+            List<ElevatorsEntity> elevatorsEntities = elevatorRepo.findAllByStatus("Active");
+
+            for (ElevatorsEntity singleElevator : elevatorsEntities) {
+                ElevatorLogsEntity elevatorLogsEntity = elevatorLogRepo.filerByElevatorId(singleElevator.getId());
+
+                ElevatorInfo elevatorInfo = new ElevatorInfo();
+                elevatorInfo.setElevatorIdentifier(singleElevator.getElevatorIdentifier());
+                elevatorInfo.setCurrentFloor(elevatorLogsEntity.getCurrentFloor());
+                elevatorInfo.setToFloor(elevatorLogsEntity.getToFloor());
+                elevatorInfo.setDirection(elevatorLogsEntity.getElevatorDirection());
+                elevatorInfo.setState(elevatorLogsEntity.getElevatorState());
+                elevatorInfos.add(elevatorInfo);
+
+            }
+
+
             response.put("status", HttpStatus.OK);
             response.put("message", "success");
-            response.put("elevators", elevatorLogRepo.filterAllElevatorLatestLog());
+            response.put("elevators", elevatorInfos);
             return new ResponseEntity<>(response, HttpStatus.OK);
 
         } catch (Exception e) {
@@ -239,12 +256,12 @@ public class ElevatorService {
         log.info("ELEVATOR LOG TO UPDATE {}", new Gson().toJson(createLog));
         log.info(appProps.getLine());
         elevatorLogRepo.save(createLog);
-        saveSqlLog("INSERT INTO ezra.elevator_logs (current_floor, elevator_direction, elvator_id, elevator_state, to_floor, updated_on) VALUES ( "+fromFloor+", "+direction+", "+elevatorId+", "+direction+", "+toFloor+", "+new Date()+");");
+        saveSqlLog("INSERT INTO ezra.elevator_logs (current_floor, elevator_direction, elvator_id, elevator_state, to_floor, updated_on) VALUES ( " + fromFloor + ", " + direction + ", " + elevatorId + ", " + direction + ", " + toFloor + ", " + new Date() + ");");
 
 
     }
 
-    public void saveSqlLog(String sqlStatement){
+    public void saveSqlLog(String sqlStatement) {
         SqlLogsEntity sqlLogsEntity = new SqlLogsEntity();
         sqlLogsEntity.setExecutedSqlQuery(sqlStatement);
         sqlLogsEntity.setExecutedBy("SYSTEM");
