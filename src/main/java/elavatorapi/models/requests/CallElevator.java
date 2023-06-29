@@ -9,5 +9,6 @@ import lombok.Data;
 public class CallElevator {
     private Integer fromFloor;
     private Integer toFloor;
+    private String elevatorIdentifier;
 
 }

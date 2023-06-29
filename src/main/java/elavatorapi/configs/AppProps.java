@@ -13,6 +13,7 @@ public class AppProps {
 
     private String status = "status";
     private String message = "message";
+    private String line = "--------------------------";
 
     @Value("${building.floors}")
     private int floorCount;

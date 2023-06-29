@@ -1,8 +1,11 @@
 package elavatorapi.configs;
 
 import com.google.gson.Gson;
+import elavatorapi.entities.ElevatorLogsEntity;
+import elavatorapi.entities.ElevatorsEntity;
 import elavatorapi.models.Elevator;
 import elavatorapi.repositories.ElevatorLogRepo;
+import elavatorapi.repositories.ElevatorRepo;
 import elavatorapi.utils.AppUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,10 +14,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Created by Itotia Kibanyu on 28 Jun, 2023
@@ -22,81 +22,44 @@ import java.util.Stack;
 @Component
 @Slf4j
 public class ElevatorConfigs implements ApplicationRunner {
-    private int floors;
-    private int elevators = 5;
-    private List<Elevator> elevatorList;
-    private List<String> directions;
-    private List<String> elevatorStates;
 
     @Autowired
     private AppProps appProps;
+
+    @Autowired
+    private ElevatorRepo elevatorRepo;
 
     @Autowired
     private ElevatorLogRepo elevatorLogRepo;
 
     @Override
     public void run(ApplicationArguments args) {
-        elevatorList = new ArrayList<>();
-        directions = new ArrayList<>();
-        elevatorStates = new ArrayList<>();
 
-        floors = appProps.getFloorCount();
+        List<ElevatorsEntity> elevatorsEntities = elevatorRepo.findAllByStatus("Active");
 
-        directions.add("UP");
-        directions.add("DOWN");
+        for (ElevatorsEntity singleElevator : elevatorsEntities) {
 
-        elevatorStates.add("IDLE");
-        elevatorStates.add("MOVING");
+            List<ElevatorLogsEntity> elevatorLogsEntity = elevatorLogRepo.findFirstByElevatorId(singleElevator.getId());
 
+            log.info(appProps.getLine());
+            log.info("Elevator " + singleElevator.getElevatorIdentifier() + " log is " + new Gson().toJson(elevatorLogsEntity));
+            log.info(appProps.getLine());
 
+            if (elevatorLogsEntity.isEmpty()) {
+                ElevatorLogsEntity createLog = new ElevatorLogsEntity();
+                createLog.setElevatorId(singleElevator.getId());
+                createLog.setToFloor(0);
+                createLog.setCurrentFloor(0);
+                createLog.setElevatorDirection("IDLE");
+                createLog.setElevatorState("IDLE");
+                createLog.setUpdatedOn(new Date());
+                elevatorLogRepo.save(createLog);
 
-        if (elevatorLogRepo.findAll().isEmpty())
-        {
-            for (int i = 0; i < elevators; i++) {
-                Elevator elevator = new Elevator();
-                elevator.setElevatorIdentifier(AppUtils.elevator(i+1));
-                elevator.setElevatorState(getRandomState());
-                int floor = getRandomFloors();
-                elevator.setElevatorDirection(getRandomDirection(floor));
-                elevator.setCurrentFloor(floor);
-                elevatorList.add(elevator);
             }
-        }else {
 
         }
 
-
-
-        log.info("Elevators {} ", new Gson().toJson(elevatorList));
-
     }
 
 
-    public int getRandomFloors() {
-        Random r = new Random();
-        int low = 0;
-        int high = floors;
-        return r.nextInt(high - low) + low;
-    }
-
-
-    public String getRandomDirection(int floor) {
-
-        if (floor == 0){
-            return "UP";
-        }
-        if (floor == appProps.getFloorCount()){
-            return "DOWN";
-        }
-        return directions.get(new Random().nextInt(directions.size()));
-    }
-
-    public String getRandomState() {
-        return elevatorStates.get(new Random().nextInt(elevatorStates.size()));
-    }
-
-
-    public List<Elevator> getElevatorList() {
-        return elevatorList;
-    }
 }

@@ -11,8 +11,16 @@ import java.util.List;
  */
 public interface ElevatorLogRepo extends JpaRepository<ElevatorLogsEntity, Long> {
 
-    @Query(nativeQuery = true, value = "SELECT Min(current_floor - :toFloor) as distance, elvator_id as elevatorId from elevator_logs where current_floor >=:toFloor and (elevator_direction='UP' || elevator_logs.elevator_state ='IDLE')")
-     List<Integer> getGoingUpElevator(int toFloor);
+
+    @Query(nativeQuery = true, value = "select * from elevator_logs where elvator_id =:elevatorId order by updated_on desc limit 1")
+    ElevatorLogsEntity filerByElevatorId(long elevatorId);
+    List<ElevatorLogsEntity> findFirstByElevatorId(long elevatorId);
+
+
+    @Query(nativeQuery = true, value = "SELECT tbl.* FROM (SELECT * FROM elevator_logs ORDER BY updated_on desc ) as tbl GROUP BY tbl.elvator_id")
+    List<ElevatorLogsEntity> filterAllElevatorLatestLog();
+
+
 
 
 }
