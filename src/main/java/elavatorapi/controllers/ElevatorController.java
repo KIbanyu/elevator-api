@@ -36,9 +36,9 @@ public class ElevatorController {
 
 
     @PostMapping("/call-elevator")
-    public ResponseEntity<HashMap<String, Object>> callElevator(@RequestBody CallElevator request) {
+    public ResponseEntity<HashMap<String, Object>> callElevator(@RequestBody CallElevator request) throws Exception {
 
-        HashMap<String, Object> response = new HashMap<>();
+        response = new HashMap<>();
 
 
         String[] elevators = elevatorRepo.searchAllByStatus();
@@ -84,11 +84,7 @@ public class ElevatorController {
 
         }
 
-        try {
-            elevatorService.getElevator(request);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        elevatorService.getElevator(request);
         response.put(appProps.getStatus(), HttpStatus.OK);
         response.put(appProps.getMessage(), "Success");
         return new ResponseEntity<>(response, HttpStatus.OK);
